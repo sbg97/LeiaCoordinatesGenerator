@@ -1,0 +1,21 @@
+Top of USS Enterprise (gun)
+	- (35500, 25000)
+	- (78,171)small scale
+Top-Front of Enterprise 
+	- (36000, 24000)
+	- (94,140)
+Front of Enterprise
+	- (37000,23000)
+	- (125,109)
+Bottom of Enterprise
+	- (33000,20000)
+	- (0,16)
+Klingon gun
+	- (41000,20000)
+	- (250,15)
+Beam hits near gun
+	- (39000,23000)
+	- (188,109)
+Klingon Explode pt
+	- (39000,22000)
+	- (188,78)
