@@ -1,6 +1,11 @@
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
+import numpy as np
+
+PI = 3.141592654
+SECONDS_PER_POINT = 0.001
+FPS = 15
 
 def perform_interpolation(input_times, input_coord, output_coord):
     output_coord.clear()
@@ -13,7 +18,7 @@ def perform_interpolation(input_times, input_coord, output_coord):
         k_0 = 0
         equal_done = False
         
-        interpolated_point
+        interpolated_point = 0
 
         for i in range(len(input_times)):
             if (input_times[i] == current_time):
@@ -66,6 +71,7 @@ def perform_interpolation(input_times, input_coord, output_coord):
 
         # continue with the next time step
         current_time += SECONDS_PER_POINT
+    return output_coord
         
 def plot_path(verts = []):
     verts = [
@@ -74,23 +80,31 @@ def plot_path(verts = []):
        (1., 0.8),  # P2
        (0.8, 0.),  # P3
     ]
+    
+    xs, ys = zip(*verts)
+    Xs, Ys = [], []
+    
+    perform_interpolation([0,1,2,3], xs, Xs)
+    perform_interpolation([0,1,2,3], ys, Ys)
 
-    codes = [Path.LINETO] * len(verts)
+    thing = list(zip(Xs,Ys))
+    
+    codes = [Path.LINETO] * len(thing)
     codes[0] = Path.MOVETO
 
-    path = Path(verts, codes)
+    path = Path(thing, codes)
 
     fig, ax = plt.subplots()
     patch = patches.PathPatch(path, edgecolor='red', facecolor='none', lw=2)
     ax.add_patch(patch)
 
-    xs, ys = zip(*verts)
-    ax.plot(xs, ys, 'x--', lw=2, color='black', ms=10)
+    #xs, ys = zip(*thing)
+    #ax.plot(xs, ys, 'x--', lw=2, color='black', ms=10)
 
-    ax.text(-0.05, -0.05, 'P0')
-    ax.text(0.15, 1.05, 'P1')
-    ax.text(1.05, 0.85, 'P2')
-    ax.text(0.85, -0.05, 'P3')
+    #ax.text(-0.05, -0.05, 'P0')
+    #ax.text(0.15, 1.05, 'P1')
+    #ax.text(1.05, 0.85, 'P2')
+    #ax.text(0.85, -0.05, 'P3')
 
     ax.set_xlim(-0.1, 1.1)
     ax.set_ylim(-0.1, 1.1)
