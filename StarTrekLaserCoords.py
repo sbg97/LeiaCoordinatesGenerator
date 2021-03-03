@@ -81,33 +81,59 @@ def plot_path(verts = []):
        (0.8, 0.),  # P3
     ]
     
+    colors = [
+       (255, 255, 0.),   # P0
+       (0., 255, 255),  # P1
+       (255, 0., 255),  # P2
+       (0., 0., 0.),  # P3
+    ]
+    
     xs, ys = zip(*verts)
     Xs, Ys = [], []
     
+    rs, gs, bs = zip(*colors)
+    Rs, Gs, Bs = [], [], []
+    
     perform_interpolation([0,1,2,3], xs, Xs)
     perform_interpolation([0,1,2,3], ys, Ys)
-
-    thing = list(zip(Xs,Ys))
+    perform_interpolation([0,1,2,3], rs, Rs)
+    perform_interpolation([0,1,2,3], gs, Gs)
+    perform_interpolation([0,1,2,3], bs, Bs)
     
-    codes = [Path.LINETO] * len(thing)
-    codes[0] = Path.MOVETO
-
-    path = Path(thing, codes)
-
-    fig, ax = plt.subplots()
-    patch = patches.PathPatch(path, edgecolor='red', facecolor='none', lw=2)
-    ax.add_patch(patch)
-
-    #xs, ys = zip(*thing)
-    #ax.plot(xs, ys, 'x--', lw=2, color='black', ms=10)
-
-    #ax.text(-0.05, -0.05, 'P0')
-    #ax.text(0.15, 1.05, 'P1')
-    #ax.text(1.05, 0.85, 'P2')
-    #ax.text(0.85, -0.05, 'P3')
-
-    ax.set_xlim(-0.1, 1.1)
-    ax.set_ylim(-0.1, 1.1)
+    
+    Xs = np.clip(Xs, 0., 255.)
+    Ys = np.clip(Ys, 0., 255.)
+    Rs = np.clip(Rs, 0., 255.)
+    Gs = np.clip(Gs, 0., 255.)
+    Bs = np.clip(Bs, 0., 255.)
+    
+    Colors = np.array(list(zip(Rs, Gs, Bs)))
+    plt.scatter(Xs, Ys, s=1, c=Colors/255)
+    
+    # write to file
+    f = open("LaserCoordsOutput.txt", "w")
+    
+    f.write("Xs\n")
+    for x in Xs:
+        f.write(str(round(x)))
+        f.write(",")
+    f.write("\nYs\n")
+    for y in Ys:
+        f.write(str(round(y)))
+        f.write(",")
+    f.write("\nRs\n")
+    for r in Rs:
+        f.write(str(round(r)))
+        f.write(",")
+    f.write("\nGs\n")
+    for g in Gs:
+        f.write(str(round(g)))
+        f.write(",")
+    f.write("\nBs\n")
+    for b in Bs:
+        f.write(str(round(b)))
+        f.write(",")
+    
     plt.show()
 
 
