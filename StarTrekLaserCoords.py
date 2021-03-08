@@ -1,145 +1,178 @@
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
-import numpy as np
+from PointInterpolatorAndOutputter import interpolateAndOutput
+import math
+
+SECONDS_PER_FRAME = 1./15.
 
 PI = 3.141592654
-SECONDS_PER_POINT = 0.001
-FPS = 15
+explosioncoords = [(0,0), (1,4), (-5,8), (-2,1), (-8,0), (-3,-2), (-7,-7), (-1,-3)]
+explosion2coords = [(0,0), (1,4), (-5,8), (-2,1), (-8,0), (-3,-2), (-7,-7), (-1,-3), (-1,-8), (2,-4)]
 
-def perform_interpolation(input_times, input_coord, output_coord):
-    output_coord.clear()
+def shootDisruptor(verts, times, colors, start, end, percentage = 0.4, duration = 0.249):
+    start_time = times[-1]
+    t = start_time
     
-    current_time = input_times[0];
-    while current_time <= input_times[-1]:
-        # find p0, p1, m0, and m1
-
-        # find the index of the previous point
-        k_0 = 0
-        equal_done = False
+    #define 2 points per frame
+    while(t < start_time + duration):
+        #insert first point
+        t += SECONDS_PER_FRAME / 2.0
+        times.append(t)
         
-        interpolated_point = 0
-
-        for i in range(len(input_times)):
-            if (input_times[i] == current_time):
-                # just put the point in and be done with it
-                interpolated_point = input_coord[i]
-                equal_done = True;
-                break
-            if (input_times[i] > current_time):
-                k_0 = i - 1
-                break
-        if (not equal_done):
-            # find the index of the next point
-            k_1 = k_0 + 1
-
-            # find the slope of the previous point
-            m_0 = 0
-            if (k_0 == 0):
-                # edge case when k_0 == 0
-                m_0 = (input_coord[k_1] - input_coord[k_0]) / (input_times[k_1] - input_times[k_0])
-            else:
-                # k_0>0, so k_0-1 exists
-                m_0 = 0.5 * ((input_coord[k_1] - input_coord[k_0]) / (input_times[k_1] - input_times[k_0]) + (input_coord[k_0] - input_coord[k_0 - 1]) / (input_times[k_0] - input_times[k_0 - 1]))
-
-            # find the slope of the next point
-            m_1 = 0
-            if (k_1 == len(input_times) - 1):
-                # edge case when k_1 == len(input_times) - 1
-                m_1 = (input_coord[k_1] - input_coord[k_0]) / (input_times[k_1] - input_times[k_0])
-            else:
-                # k_1< len(input_times) - 1, so k_1+1 exists
-                m_1 = 0.5 * ((input_coord[k_1 + 1] - input_coord[k_1]) / (input_times[k_1 + 1] - input_times[k_1]) + (input_coord[k_1] - input_coord[k_0]) / (input_times[k_1] - input_times[k_0]))
-
-            # find the distance we need to interpolate as a double between 0 and 1, 0 being point 0, and 1 being point 1
-            t = (current_time - input_times[k_0]) / (input_times[k_1] - input_times[k_0])
-
-            # use t to get h00, h10, h01, and h11
-            h00 = 2 * t * t * t - 3 * t * t + 1
-            h10 = t * t * t - 2 * t * t + t
-            h01 = -2 * t * t * t + 3 * t * t
-            h11 = t * t * t - t * t
-
-            # try renormalizing m_0 and m_1
-            m_0 *= (input_times[k_1] - input_times[k_0])
-            m_1 *= (input_times[k_1] - input_times[k_0])
-
-            interpolated_point = h00 * input_coord[k_0] + h10 * m_0 + h01 * input_coord[k_1] + h11 * m_1
-
-        # put in the interpolated coordinate
-        output_coord.append(interpolated_point)
-
-        # continue with the next time step
-        current_time += SECONDS_PER_POINT
-    return output_coord
+            #interpolate between start and end
+        interp = max((1.0 + percentage) / duration * (t - start_time) - percentage, 0.0)
+        verts.append(((1-interp)*start[0] + (interp)*end[0], (1-interp)*start[1] + (interp)*end[1]))
         
-def plot_path(verts = []):
-    verts = [
-       (0., 0.),   # P0
-       (0.2, 1.),  # P1
-       (1., 0.8),  # P2
-       (0.8, 0.),  # P3
-    ]
+        colors.append((0,255,0))
+        
+        #insert second point
+        t += SECONDS_PER_FRAME / 2.0
+        times.append(t)
+        
+            #interpolate between start and end
+        interp = min((1.0 + percentage) / duration * (t - start_time), 1.0)
+        verts.append(((1-interp)*start[0] + (interp)*end[0], (1-interp)*start[1] + (interp)*end[1]))
+        
+        colors.append((0,255,0))
+        
+def shootPhaser(verts, times, colors, start, end1, end2, duration = 1.5):
+    start_time = times[-1]
+    t = start_time
     
-    colors = [
-       (255, 255, 0.),   # P0
-       (0., 255, 255),  # P1
-       (255, 0., 255),  # P2
-       (0., 0., 0.),  # P3
-    ]
+    #define 2 points per frame
+    while(t < start_time + duration):
+        #interpolate between end1 and end2
+        interp = (t - start_time) / duration
+        
+        #insert first point
+        t += SECONDS_PER_FRAME / 2.0
+        times.append(t)
+        
+        verts.append(start)
+        
+        colors.append((255,0,0))
+        
+        #insert second point
+        t += SECONDS_PER_FRAME / 2.0
+        times.append(t)
+        
+        verts.append(((1-interp)*end1[0] + (interp)*end2[0], (1-interp)*end1[1] + (interp)*end2[1]))
+        
+        colors.append((255,0,0))
+        
+def littleExplosion(verts, times, colors, start, duration = 0.1295, rotation = 100.0 / 180.0 * PI, scale = 4.0):
+    start_time = times[-1]
+    t = start_time
     
-    xs, ys = zip(*verts)
-    Xs, Ys = [], []
+    # define N points per frame where N is len(explosioncoords)
+    while(t < start_time + duration):
+        for v in explosioncoords:
+            t += SECONDS_PER_FRAME / len(explosioncoords)
+            times.append(t)
+            
+            # 2D translate, rotate, and scale the points of v
+            verts.append((start[0] + scale * (v[0]*math.cos(rotation) + v[1]*math.sin(rotation)), (start[1] + scale * (v[1]*math.cos(rotation) - v[0]*math.sin(rotation)))))
+            
+            colors.append((255,0,0))
+            
+def bigExplosion(verts, times, colors, start, duration = 1.484, rotation = -90.0 / 180.0 * PI, scale1 = 2.0, scale2 = 5.0):
+    start_time = times[-1]
+    t = start_time
     
-    rs, gs, bs = zip(*colors)
-    Rs, Gs, Bs = [], [], []
+    # define N points per frame where N is len(explosioncoords)
+    while(t < start_time + duration):
+        for v in explosion2coords:
+            
+            #interpolate between scale1 and scale2
+            interp = (t - start_time) / duration
+            scale = scale1 * (1.0 - interp) + scale2 * interp
+            
+            t += SECONDS_PER_FRAME / len(explosion2coords)
+            times.append(t)
+            
+            # 2D translate, rotate, and scale the points of v
+            verts.append((start[0] + scale * (v[0]*math.cos(rotation) + v[1]*math.sin(rotation)), (start[1] + scale * (v[1]*math.cos(rotation) - v[0]*math.sin(rotation)))))
+            
+            colors.append((255,0,0))
+            
+def travel(verts, times, colors, start, end, duration = 0.035, steps = 4):
+    start_time = times[-1]
+    t = start_time
     
-    perform_interpolation([0,1,2,3], xs, Xs)
-    perform_interpolation([0,1,2,3], ys, Ys)
-    perform_interpolation([0,1,2,3], rs, Rs)
-    perform_interpolation([0,1,2,3], gs, Gs)
-    perform_interpolation([0,1,2,3], bs, Bs)
-    
-    
-    Xs = np.clip(Xs, 0., 255.)
-    Ys = np.clip(Ys, 0., 255.)
-    Rs = np.clip(Rs, 0., 255.)
-    Gs = np.clip(Gs, 0., 255.)
-    Bs = np.clip(Bs, 0., 255.)
-    
-    Colors = np.array(list(zip(Rs, Gs, Bs)))
-    plt.scatter(Xs, Ys, s=1, c=Colors/255)
-    
-    # write to file
-    f = open("LaserCoordsOutput.txt", "w")
-    
-    f.write("Xs\n")
-    for x in Xs:
-        f.write(str(round(x)))
-        f.write(",")
-    f.write("\nYs\n")
-    for y in Ys:
-        f.write(str(round(y)))
-        f.write(",")
-    f.write("\nRs\n")
-    for r in Rs:
-        f.write(str(round(r)))
-        f.write(",")
-    f.write("\nGs\n")
-    for g in Gs:
-        f.write(str(round(g)))
-        f.write(",")
-    f.write("\nBs\n")
-    for b in Bs:
-        f.write(str(round(b)))
-        f.write(",")
-    
-    plt.show()
-
+    for i in range(steps):
+        t += duration / steps
+        times.append(t)
+        
+        interp = (t - start_time) / duration
+        verts.append(((1-interp)*start[0] + (interp)*end[0], (1-interp)*start[1] + (interp)*end[1]))
+        
+        colors.append((0,0,0))
 
 def main():
-    print("Hello World!")
-    plot_path()
+    verts = [(0,0)]
+    colors = [(0,0,0)]
+    times = [0]
+    
+    # first green shot
+    shootDisruptor(verts, times, colors, (250,15), (125,109))
+    littleExplosion(verts, times, colors, (125,109))
+    travel(verts, times, colors, (125,109), (250,15))
+    
+    # second green shot
+    shootDisruptor(verts, times, colors, (250,15), (125,109))
+    littleExplosion(verts, times, colors, (125,109))
+    travel(verts, times, colors, (125,109), (78, 171))
+    
+    #phaser
+    shootPhaser(verts, times, colors, (78, 171), (90,230), (140,200))
+    travel(verts, times, colors, (140,200), (150, 100))
+    travel(verts, times, colors, (150, 100), (250,15))
+    
+    
+    # first green shot
+    shootDisruptor(verts, times, colors, (250,15), (125,109))
+    littleExplosion(verts, times, colors, (125,109))
+    travel(verts, times, colors, (125,109), (250,15))
+    
+    # second green shot
+    shootDisruptor(verts, times, colors, (250,15), (125,109))
+    littleExplosion(verts, times, colors, (125,109))
+    travel(verts, times, colors, (125,109), (250,15))
+    
+    # third green shot
+    shootDisruptor(verts, times, colors, (250,15), (125,109))
+    littleExplosion(verts, times, colors, (125,109))
+    travel(verts, times, colors, (125,109), (0, 16), duration = 0.21)
+    
+    #shoot blue photon torpoedo
+    #first point
+    times.append(times[-1] + 0.02)
+    verts.append((0, 16))
+    colors.append((0,0,255))
+    
+    #second point
+    times.append(times[-1] + 0.84)
+    verts.append((75,75))
+    colors.append((0,0,255))
+    
+    #third point
+    times.append(times[-1] + 0.497)
+    verts.append((150,25))
+    colors.append((0,0,255))
+    
+    #fourth point
+    times.append(times[-1] + 0.2)
+    verts.append((188,109))
+    colors.append((0,0,255))
+    
+    #big explosion
+    bigExplosion(verts, times, colors, (188,78))
+    travel(verts, times, colors, (225,96), (250, 15), duration = 0.0315)
+    
+    #last push to make sure it has rested
+    times.append(times[-1] + (0.0315/4.0))
+    verts.append((250,15))
+    colors.append((0,0,0))
+    
+    interpolateAndOutput(verts[1:], colors[1:], times[1:])
     
 if __name__ == "__main__":
     main()
